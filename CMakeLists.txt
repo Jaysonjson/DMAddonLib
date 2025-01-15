@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.28)
+project(DMAddonLib)
+
+set(CMAKE_CXX_STANDARD 17)
+set(make_testing_exe ON CACHE BOOL "Make Testing Executable")
+set(static_lib OFF CACHE BOOL "Static Library")
+
+file(GLOB_RECURSE SOURCES_CPP CONFIGURE_DEPENDS "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
+
+if (MSVC)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif(MSVC)
+
+if(make_testing_exe)
+    message("Making Executable")
+    add_compile_definitions(DMADDON_TESTING)
+    add_executable(DMAddonLib ${SOURCES_CPP})
+else(make_testing_exe)
+    if(static_lib)
+        message("Making STATIC Library")
+        add_library(DMAddonLib STATIC ${SOURCES_CPP})
+    else()
+        message("Making SHARED Library")
+        add_library(DMAddonLib SHARED ${SOURCES_CPP})
+    endif(static_lib)
+endif(make_testing_exe)
