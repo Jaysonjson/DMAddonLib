@@ -15,6 +15,7 @@ void packResources(DM::Zip& archive, DM::AddonPack* addonPack);
 
 void DM::AddonPack::pack(const string& extension) {
     Zip archive{packData.id + "." + extension};
+    archive.create();
     string texturePath = packData.id + "/textures/";
     string modelPath = packData.id + "/geo/";
     string animationPath = packData.id + "/animation/";
@@ -42,13 +43,13 @@ void DM::AddonPack::addExterior(const string& id, const string& name, const stri
 void DM::AddonPack::addExterior(const string& id, const string& name, const string& description, const string& model,
     const string& externalModel, const string& animation, const string& externalAnimation, const string& texture,
     const string& externalTexture, const string& builder) {
-    addExterior({packData.id + ":" + id, name, description, addModel(externalModel, model).getPath(packData), addAnimation(externalAnimation, animation).getPath(packData), addTexture(externalTexture, texture).getPath(packData), {}}, builder);
+    addExterior({packData.id + ":" + id, name, description, addModel(existingPrefix + externalModel, model).getPath(packData), addAnimation(existingPrefix + externalAnimation, animation).getPath(packData), addTexture(existingPrefix + externalTexture, texture).getPath(packData), {}}, builder);
 }
 
 void DM::AddonPack::addExteriorLayer(const string& target, const string& layer, const string& type, const string& texture, const string& externalTexture) {
     for (auto& exterior : clientExteriors) {
         if(exterior.getId() != packData.id + ":" + target) continue;
-        exterior.layers.emplace(layer, Tardis::ClientLayer{addTexture(externalTexture, texture).getPath(packData), type});
+        exterior.layers.emplace(layer, Tardis::ClientLayer{addTexture(existingPrefix + externalTexture, texture).getPath(packData), type});
     }
 }
 
@@ -131,6 +132,7 @@ void packLayers(DM::Zip& archive, DM::AddonPack* addonPack, const string& layerP
 void packInteriors(DM::Zip& archive, DM::AddonPack* addonPack, const string& interiorPath) {
     for (auto& interior : addonPack->interiors) {
         nlohmann::json js;
+        interior.path = interiorPath + "structures/" + Identifier::extractPath(interior.getId()) + ".nbt";
         to_json(js, interior);
         archive.addFile(js.dump(4), interiorPath + Identifier::extractPath(interior.getId()) + ".json");
         archive.addExternalFile(interior.localNbtPath, interiorPath + "structures/" + Identifier::extractPath(interior.getId()) + ".nbt");
@@ -143,7 +145,62 @@ void packResources(DM::Zip& archive, DM::AddonPack* addonPack) {
     }
 }
 
-void DM::AddonPack::extract(const string& packFile, const string& outDir) {
+void DM::AddonPack::load(const string& packFile) {
+    load(packFile, "");
+}
+
+string readFile(const std::string& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) return "";
+    return string(std::istreambuf_iterator(file), std::istreambuf_iterator<char>());
+}
+
+//TODO: LOADING
+void DM::AddonPack::load(const string& packFile, const string& outDirPrefix) {
+    string root = "";
+    std::filesystem::create_directories(outDirPrefix);
+    if(outDirPrefix.empty()) {
+        root = std::filesystem::path(packFile).stem().string() + "/";
+        Zip::unzip(packFile);
+    } else {
+        root = outDirPrefix + std::filesystem::path(packFile).stem().string() + "/";
+        Zip::unzip(packFile, std::filesystem::path(outDirPrefix + std::filesystem::path(packFile).stem().string()));
+    }
+    existingPrefix = root;
+
+    packData = PackData{readFile(root + "pack.json")};
+    std::cout << "client exterior" << std::endl;
+    for (const auto& entry : std::filesystem::directory_iterator(root + "tardis/exterior/client/")) {
+        if (entry.is_regular_file()) {
+            clientExteriors.emplace_back(Tardis::ClientExterior{readFile(entry.path().string())});
+        }
+    }
+    std::cout << "client exterior override" << std::endl;
+
+    for (const auto& entry : std::filesystem::directory_iterator(root + "tardis/exterior/client/override/")) {
+        if (entry.is_regular_file()) {
+            clientExteriorOverrides.emplace_back(Tardis::ClientExterior{readFile(entry.path().string())});
+        }
+    }
+    std::cout << "server exterior" << std::endl;
+    for (const auto& entry : std::filesystem::directory_iterator(root + "tardis/exterior/server")) {
+        if (entry.is_regular_file()) {
+            vector<Tardis::ServerExterior> exteriors = nlohmann::json::parse(readFile(entry.path().string())).get<vector<Tardis::ServerExterior>>();
+            serverExteriors.insert(serverExteriors.end(), exteriors.begin(), exteriors.end());
+        }
+    }
+    std::cout << "interior" << std::endl;
+
+    for (const auto& entry : std::filesystem::directory_iterator(root + "tardis/interior/server/")) {
+        if (entry.is_regular_file()) {
+            Tardis::Interior interior{};
+            interior.fromJson(readFile(entry.path().string()));
+            interior.localNbtPath = existingPrefix + interior.path;
+            interiors.emplace_back(interior);
+        }
+    }
 
 }
+
+
 

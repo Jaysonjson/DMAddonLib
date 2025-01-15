@@ -5,7 +5,6 @@
 
 //TESTING
 int main() {
-    //DM::AddonPack::extract("example_addon.zip", "test");
     /*DM::Tardis::ClientExterior exterior{};
 exterior.setId("example_addon:test");
 exterior.addLayer("tnt_layer", "cool_texture", "default");
@@ -16,11 +15,13 @@ addon_pack.addExterior(exterior, "dalekmod:default");*/
     addon_pack.addModel("test_tardis.geo.json", "test_tardis.geo.json");
     addon_pack.addAnimation("test_tardis.animation.json", "test_tardis.animation.json");
      */
+    DM::AddonPack testLoadPack{};
+    testLoadPack.load("example_addon.zip", "cache/");
+    testLoadPack.packData.id = "example_addon_loaded";
+    testLoadPack.pack("zip");
     DM::AddonPack addon_pack{};
     addon_pack.packData.id = "example_addon";
 
-    map<string, DM::Tardis::ClientLayer> layers{};
-    layers.emplace("tnt_layer", DM::Tardis::ClientLayer{"texture", "default"});
     addon_pack.addExterior("cool_tardis", "dalekmod:default", "Cool Description", "cool_tardis.geo.json",
         "test_tardis.geo.json", "cool_tardis.animation.json", "test_tardis.animation.json", "cool_tardis.png", "test_tardis.png", "dalekmod:default");
     addon_pack.addExteriorLayer("cool_tardis", "tnt_layer", "default", "cool_tardis_tnt_layer.png", "tnt_layer.png");

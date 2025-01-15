@@ -73,6 +73,10 @@ namespace DM::Tardis {
         void setId(const string& id) { if(Identifier::valid(id)) this->id = id; }
         void setBuilder(const string& builder) { if(Identifier::valid(builder)) this->builder = builder; }
 
+        friend void from_json(const nlohmann::json& js, ServerExterior& exterior) {
+            exterior.setId(js["id"]);
+            exterior.setBuilder(js["builder"]);
+        }
         friend void to_json(nlohmann::json& json, const ServerExterior& exterior) {
             json = nlohmann::json{{"id", exterior.id},{"builder", exterior.builder}};
         }

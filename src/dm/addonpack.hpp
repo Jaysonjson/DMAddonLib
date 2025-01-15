@@ -17,6 +17,8 @@ namespace DM {
         map<string, Tardis::LayerCheck> layerChecks{};
         vector<Tardis::ClientExterior> clientExteriorOverrides{};
         vector<Resource> resources{};
+        /* used for loaded addons, for the external files */
+        string existingPrefix = "";
 
         /*
          * the add functions are just helper/utility classes to make it easier to add data to the pack, they will be used to generate the json files.
@@ -75,8 +77,8 @@ namespace DM {
         }
 
         void pack(const string& extension = "dma");
-
-        static void extract(const string& packFile, const string& outDir);
+        void load(const string& packFile);
+        void load(const string& packFile, const string& outDirPrefix);
     };
 }
 

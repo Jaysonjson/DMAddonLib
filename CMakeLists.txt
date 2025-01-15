@@ -4,12 +4,13 @@ project(DMAddonLib)
 set(CMAKE_CXX_STANDARD 17)
 set(make_testing_exe ON CACHE BOOL "Make Testing Executable")
 set(static_lib OFF CACHE BOOL "Static Library")
+set(CMAKE_BUILD_TYPE Release)
 
 file(GLOB_RECURSE SOURCES_CPP CONFIGURE_DEPENDS "src/*.cpp" "src/*.hpp" "src/*.c" "src/*.h")
 
-if (MSVC)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif(MSVC)
+endif()
 
 if(make_testing_exe)
     message("Making Executable")
