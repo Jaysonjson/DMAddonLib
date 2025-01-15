@@ -38,12 +38,21 @@ namespace DM::Tardis {
             id(std::move(id)), name(std::move(name)), description(std::move(description)), model(std::move(model)), animation(std::move(animation)), texture(std::move(texture)), layers(layers)
         {}
 
-        string getId() { return this->id; }
+        string getId() const { return this->id; }
         void setId(const string& id) { if(Identifier::valid(id)) this->id = id; }
         void fromJson(const string& json);
         void addLayer(const string& layer, const string& texture, const string& type);
         friend void to_json(nlohmann::json& json, const ClientExterior& exterior) {
-            json = nlohmann::json{
+            if(!exterior.id.empty()) json["id"] = exterior.id;
+            if(!exterior.name.empty()) json["name"] = exterior.name;
+            if(!exterior.description.empty()) json["description"] = exterior.description;
+            if(!exterior.model.empty()) json["model"] = exterior.model;
+            if(!exterior.animation.empty()) json["animation"] = exterior.animation;
+            if(!exterior.texture.empty()) json["texture"] = exterior.texture;
+            if(!exterior.layers.empty()) json["layers"] = exterior.layers;
+
+            //Update to include overrides
+            /*json = nlohmann::json{
                 {"id", exterior.id},
                 {"name", exterior.name},
                 {"description", exterior.description},
@@ -51,7 +60,7 @@ namespace DM::Tardis {
                 {"animation", exterior.animation},
                 {"texture", exterior.texture},
                 {"layers", exterior.layers}
-            };
+            };*/
         }
     };
 
@@ -93,6 +102,7 @@ namespace DM::Tardis {
         int yaw;
         string description;
         string path;
+        string localNbtPath;
 
         void setId(const string& id) { if(Identifier::valid(id)) this->id = id; }
         string getId() { return this->id; }

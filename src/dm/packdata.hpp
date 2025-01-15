@@ -11,7 +11,7 @@ namespace DM {
         string version = "0.1";
         string id = "daddon";
         int protocol = CURRENT_PROTOCOL;
-        vector<std::string> authors{};
+        vector<string> authors{};
 
         explicit PackData(const string& json) { fromJson(json); }
         PackData() = default;
